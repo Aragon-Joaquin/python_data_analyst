@@ -25,10 +25,10 @@ ColorPrint(format(f"Filas x Columnas: {dtSet.shape}"), COLORS.GREEN) #printea di
 ColorPrint(format(f" Descripcion:\n{dtSet.describe()}"), COLORS.GREEN) #printea descripcion general (min, max, standard, media, etc...)
 
 # 3)
-ColorPrint(format(f"3.1) DETECTAR NULOS:\n{dtSet.isnull().sum()} dato/s son nulos"), COLORS.RED) # printea true si el campo es nulo
+ColorPrint(format(f"3.1) DETECTAR NULOS POR CAMPO:\n{dtSet.isnull().sum()}"), COLORS.RED) # printea true si el campo es nulo
 
 edadMedia = round(dtSet["Edad"].mean()) # agarramos la media y la redondeamos
-ingresoMedia = round(dtSet["Ingreso"].mean()) # x2 aca
+ingresoMedia = round(dtSet["Ingresos"].mean()) # x2 aca
 
 # dtSet["Ingresos"].fillna(0, inplace = True) #cambiamos ingresos a 0 modificando el dataSet Previo (inplace=true)
 # dtSet["Edad"].fillna(0, inplace = True) #mismo para edad
