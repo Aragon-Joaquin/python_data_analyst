@@ -25,22 +25,26 @@ ColorPrint(format(f"Filas x Columnas: {dtSet.shape}"), COLORS.GREEN) #printea di
 ColorPrint(format(f" Descripcion:\n{dtSet.describe()}"), COLORS.GREEN) #printea descripcion general (min, max, standard, media, etc...)
 
 # 3)
-nulls = dtSet.isnull() # detectea valores nulos
-ColorPrint(format(f"3.1) DETECTAR NULOS, TRUE SI LO SON:\n{nulls}"), COLORS.RED) # printea true si el campo es nulo
+ColorPrint(format(f"3.1) DETECTAR NULOS:\n{dtSet.isnull().sum()} dato/s son nulos"), COLORS.RED) # printea true si el campo es nulo
+
+edadMedia = round(dtSet["Edad"].mean()) # agarramos la media y la redondeamos
+ingresoMedia = round(dtSet["Ingreso"].mean()) # x2 aca
 
 # dtSet["Ingresos"].fillna(0, inplace = True) #cambiamos ingresos a 0 modificando el dataSet Previo (inplace=true)
 # dtSet["Edad"].fillna(0, inplace = True) #mismo para edad
-dtSet.fillna({"Ingresos": dtSet["Ingresos"].mean(), "Edad": dtSet["Edad"].mean()}, inplace=True) # pero mejor en una sola linea! (y haciendolo con la media!)
+dtSet.fillna({"Ingresos": ingresoMedia, "Edad": edadMedia}, inplace=True) # pero mejor en una sola linea! (y haciendolo con la media!)
 
 ColorPrint(format(f"3.2) RELLENAR VALORES nan!:\n{dtSet}"), COLORS.RED)
 
 # 5) (cambie de orden con el 4 por inconsistencias de 0 y "?")
-dtSet.replace({"Ingresos": "?", "Edad": "desconocido" }, {"Ingresos": dtSet["Ingresos"].mean(), "Edad": dtSet["Edad"].mean()}, inplace=True)
+dtSet.replace({"Ingresos": "?", "Edad": "desconocido" }, {"Ingresos": ingresoMedia, "Edad": edadMedia}, inplace=True)
 ColorPrint(format(f"4) REEMPLAZAR INCOSISTENCIAS '?' Y 'desconocido'!:\n{dtSet}"), COLORS.CYAN)
 
 # 4)
+prevDups = dtSet.duplicated().sum()
 dtSet.drop_duplicates(inplace=True) # modificamos el dataset
-ColorPrint(format(f"5) BORRAR DUPLICADOS!:\n{dtSet}"), COLORS.YELLOW)
+ColorPrint(format(f"5) BORRAR DUPLICADOS!:\n{prevDups} han sido borrados"), COLORS.YELLOW)
+
 
 # 6)
 ColorPrint(format(f"6) ANALISIS DESCRIPTIVO:\n{dtSet.describe()}"), COLORS.MAGENTA) #analisis descriptivo
