@@ -52,7 +52,7 @@ ColorPrint(format(f"4.1) NUMERO DE VALORES NULOS EN LOS CAMPOS STR: \n{dtSet[['N
 
 
 dtSet.replace({'Nombre': {pd.NA: 'Anonimo'}, 'Ciudad': {pd.NA: 'Desconocido'}, 'Ocupacion': {pd.NA: 'Desconocido'}}, inplace=True) #equivalente al bloque anterior
-ColorPrint(f"4.1) NUMERO DE VALORES LUEGO DE REEMPLAZAR NULOS: \n{dtSet[['Nombre','Ciudad','Ocupacion']].isnull().sum()}"), COLORS.RED) 
+ColorPrint(format(f"4.1) NUMERO DE VALORES LUEGO DE REEMPLAZAR NULOS: \n{dtSet[['Nombre','Ciudad','Ocupacion']].isnull().sum()}"), COLORS.RED) 
 # 4)
 
 prevDups = dtSet.duplicated().sum()
