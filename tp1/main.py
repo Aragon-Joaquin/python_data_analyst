@@ -43,15 +43,16 @@ ColorPrint(format(f"3.2) RELLENAR VALORES nan!:\n{dtSet}"), COLORS.RED)
 #dtSet.replace({"Ingresos": "?", "Edad": "desconocido" }, {"Ingresos": ingresoMedia, "Edad": edadMedia}, inplace=True)
 #ColorPrint(format(f"4) REEMPLAZAR INCOSISTENCIAS '?' Y 'desconocido'!:\n{dtSet}"), COLORS.CYAN)
 
-ColorPrint(f"4.1) NUMERO DE VALORES NULOS EN LOS CAMPOS STR: \n",df[['Nombre','Ciudad','Ocupacion']].isnull().sum()) 
+ColorPrint(format(f"4.1) NUMERO DE VALORES NULOS EN LOS CAMPOS STR: \n{dtSet[['Nombre','Ciudad','Ocupacion']].isnull().sum()}"), COLORS.RED) 
 
-# df["Nombre"].replace('nan', 'Anonimo')
-# df["Ciudad"].replace('nan', 'Desconocido')
-# df["Ocupacion"].replace('nan', 'Desconocido')
 
-df.replace({'Nombre': {pd.NA: 'Anonimo'}, 'Ciudad': {pd.NA: 'Desconocido'}, 'Ocupacion': {pd.NA: 'Desconocido'}}, inplace=True) #equivalente al bloque anterior
-ColorPrint(f"4.1) NUMERO DE VALORES LUEGO DE REEMPLAZAR NULOS: \n",df[['Nombre','Ciudad','Ocupacion']].isnull().sum()) 
+# dtSet["Nombre"].replace('nan', 'Anonimo')
+# dtSet["Ciudad"].replace('nan', 'Desconocido')
+# dtSet["Ocupacion"].replace('nan', 'Desconocido')
 
+
+dtSet.replace({'Nombre': {pd.NA: 'Anonimo'}, 'Ciudad': {pd.NA: 'Desconocido'}, 'Ocupacion': {pd.NA: 'Desconocido'}}, inplace=True) #equivalente al bloque anterior
+ColorPrint(f"4.1) NUMERO DE VALORES LUEGO DE REEMPLAZAR NULOS: \n{dtSet[['Nombre','Ciudad','Ocupacion']].isnull().sum()}"), COLORS.RED) 
 # 4)
 
 prevDups = dtSet.duplicated().sum()
