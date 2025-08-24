@@ -37,10 +37,23 @@ dtSet.fillna({"Ingresos": ingresoMedia, "Edad": edadMedia}, inplace=True) # pero
 ColorPrint(format(f"3.2) RELLENAR VALORES nan!:\n{dtSet}"), COLORS.RED)
 
 # 5) (cambie de orden con el 4 por inconsistencias de 0 y "?")
-dtSet.replace({"Ingresos": "?", "Edad": "desconocido" }, {"Ingresos": ingresoMedia, "Edad": edadMedia}, inplace=True)
-ColorPrint(format(f"4) REEMPLAZAR INCOSISTENCIAS '?' Y 'desconocido'!:\n{dtSet}"), COLORS.CYAN)
+
+# Linea de abajo es irrelevante debido a que no existen datos "?" / "desconocido" por la conversion del punto 1.5 (aunque con errors="ignore" si se podria llegar a este caso, pero por el bien de no añadir complejidad innecesaria, sera de esta forma)
+
+#dtSet.replace({"Ingresos": "?", "Edad": "desconocido" }, {"Ingresos": ingresoMedia, "Edad": edadMedia}, inplace=True)
+#ColorPrint(format(f"4) REEMPLAZAR INCOSISTENCIAS '?' Y 'desconocido'!:\n{dtSet}"), COLORS.CYAN)
+
+ColorPrint(f"4.1) NUMERO DE VALORES NULOS EN LOS CAMPOS STR: \n",df[['Nombre','Ciudad','Ocupacion']].isnull().sum()) 
+
+# df["Nombre"].replace('nan', 'Anonimo')
+# df["Ciudad"].replace('nan', 'Desconocido')
+# df["Ocupacion"].replace('nan', 'Desconocido')
+
+df.replace({'Nombre': {pd.NA: 'Anonimo'}, 'Ciudad': {pd.NA: 'Desconocido'}, 'Ocupacion': {pd.NA: 'Desconocido'}}, inplace=True) #equivalente al bloque anterior
+ColorPrint(f"4.1) NUMERO DE VALORES LUEGO DE REEMPLAZAR NULOS: \n",df[['Nombre','Ciudad','Ocupacion']].isnull().sum()) 
 
 # 4)
+
 prevDups = dtSet.duplicated().sum()
 dtSet.drop_duplicates(inplace=True) # modificamos el dataset
 ColorPrint(format(f"5) BORRAR DUPLICADOS!:\n{prevDups} han sido borrados"), COLORS.YELLOW)
