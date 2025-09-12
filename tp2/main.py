@@ -1,10 +1,11 @@
+#!/usr/bin/env python
 #
 # TP2 - Aragon Joaquin, Gómez Nicolas Miguel,
 #       Marraccini Daniel, Vazquez Federico. 
 # 
 
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from colorPrinter import ColorPrint, COLORS
 
@@ -65,3 +66,30 @@ ColorPrint(format(f"3.B) DUPLICADOS EN PatientId y AppointmentID:\n{df.duplicate
 df.drop_duplicates(inplace=True,keep="first")
 ColorPrint(format(f"3.C) TRAS BORRAR DUPLICADOS EXACTOS:\n{df.duplicated().sum()} restantes"), COLORS.MAGENTA)
 # la razon por la cual eliminamos todos los duplicados excepto los primeros es debido a que pudo haber sido un error de un registro doble.
+
+#------------------------------------------------------------------------------------------
+
+#4.A)
+
+#improve this later :/
+s = df["ScheduledDay"].astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
+a = df["AppointmentDay"].astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
+
+dtScheduled = pd.to_datetime(s, dayfirst=True, errors='coerce', format="ISO8601") 
+dtAppointment = pd.to_datetime(a, dayfirst=True, errors='coerce', format="ISO8601")
+
+maskS = dtScheduled.isna() & s.notna()
+dtScheduled = dtScheduled.fillna(pd.to_datetime(s.where(maskS), errors="coerce", utc=True, dayfirst=True))
+
+maskA = dtAppointment.isna() & a.notna()
+dtAppointment = dtAppointment.fillna(pd.to_datetime(s.where(maskA), errors="coerce", utc=True, dayfirst=True))
+
+#4.B)
+df['DiffDays'] = (dtAppointment - dtScheduled).dt.days
+ColorPrint(format(f"4.B) COLUMNA DiffDays (AppointmentDay - ScheduledDay):\n{df['DiffDays']}"), COLORS.YELLOW)
+
+#4.C)
+df['DiffDays'] = df['DiffDays'].where(df['DiffDays'] >= 0, df['DiffDays'].mean())
+ColorPrint(format(f"4.B) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df['DiffDays']}"), COLORS.YELLOW)
+
+#------------------------------------------------------------------------------------------
