@@ -15,11 +15,11 @@ df = pd.read_csv('./mock/DatasetClase3_corrupto.csv', low_memory=False)
 # lowMemory usará mas memoria y cargará el archivo completo en vez de chunks con el beneficio de no mezclar las inferencias de tipos
 
 # 1.B)
-ColorPrint(format(f"1.B) FILAS x COLUMNAS:\n{df.shape}"), COLORS.GREEN)
+ColorPrint(format(f"1.B)\n> FILAS x COLUMNAS:\n{df.shape}"), COLORS.GREEN)
 
-ColorPrint(format(f"1.B) INFORMACION DEL DATAFRAME:\n{df.info()}"), COLORS.GREEN)
+ColorPrint(format(f"> INFORMACION DEL DATAFRAME:\n{df.info()}"), COLORS.GREEN)
 
-ColorPrint(format(f"1.B) DESCRIPCION DEL DATAFRAME:\n{df.describe()}"), COLORS.GREEN)
+ColorPrint(format(f"> DESCRIPCION DEL DATAFRAME:\n{df.describe()}"), COLORS.GREEN)
 
 # 1.C)
 ColorPrint(format(f"1.C) DATOS INFERIDOS DEL DATAFRAME:\n{df.dtypes}"), COLORS.GREEN)
@@ -72,18 +72,20 @@ ColorPrint(format(f"3.C) TRAS BORRAR DUPLICADOS EXACTOS:\n{df.duplicated().sum()
 
 #4.A)
 
-#improve this later :/
+#TODO: REDO THIS!! 
 s = df["ScheduledDay"].astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
 a = df["AppointmentDay"].astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
 
-dtScheduled = pd.to_datetime(s, dayfirst=True, errors='coerce', format="ISO8601") 
-dtAppointment = pd.to_datetime(a, dayfirst=True, errors='coerce', format="ISO8601")
+formatDate = "ISO8601" #or '%d/%m/%Y', idk
+
+dtScheduled = pd.to_datetime(s, dayfirst=True, errors='coerce', format=formatDate) 
+dtAppointment = pd.to_datetime(a, dayfirst=True, errors='coerce', format=formatDate)
 
 maskS = dtScheduled.isna() & s.notna()
-dtScheduled = dtScheduled.fillna(pd.to_datetime(s.where(maskS), errors="coerce", utc=True, dayfirst=True))
+dtScheduled = dtScheduled.fillna(pd.to_datetime(s.where(maskS), errors="coerce", utc=True, dayfirst=True, format=formatDate))
 
 maskA = dtAppointment.isna() & a.notna()
-dtAppointment = dtAppointment.fillna(pd.to_datetime(s.where(maskA), errors="coerce", utc=True, dayfirst=True))
+dtAppointment = dtAppointment.fillna(pd.to_datetime(s.where(maskA), errors="coerce", utc=True, dayfirst=True, format=formatDate))
 
 #4.B)
 df['DiffDays'] = (dtAppointment - dtScheduled).dt.days
@@ -97,8 +99,8 @@ ColorPrint(format(f"4.C) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df[
 # La baja cardinalidad se refiere a columnas con pocos valores unicos.
 
 #5.A)
-ColorPrint(format(f"5.A) 'Gender' CARDINALIDAD :\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
-ColorPrint(format(f"5.A) 'No-Show' CARDINALIDAD :\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.BLUE)
+ColorPrint(format(f"5.A)\n> 'Gender' CARDINALIDAD :\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
+ColorPrint(format(f"> 'No-Show' CARDINALIDAD :\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.BLUE)
 
 #5.C)
 #variables para genero
@@ -113,7 +115,7 @@ NS_YES = "SI"
 NS_NO = "NO"
 
 df["Gender"] = (df["Gender"].astype("string").str.strip().str.upper())
-df["No-show"] = (df["No-show"].astype("string").str.upper())
+df["No-show"] = (df["No-show"].astype("string").str.strip().str.upper())
 
 df["Gender"] = df["Gender"].replace({
     "FEM":G_FEMALE, "FEMALE": G_FEMALE ,"FEMENINO": G_FEMALE, "MUJER": G_FEMALE,
@@ -141,23 +143,26 @@ ColorPrint(format(f"5.D) COLUMNA 'DidAttend':\n{df["DidAttend"]}"), COLORS.BLUE)
 
 #6.A)
 
-df["Age"] = pd.to_numeric(df["Age"], errors="coerce").astype("UInt16") # UInt8 - 0 a 255
-# usa pd.NA en vez de numpy.nan, UINT16 Limite: 0 a 65535
+df["Age"] = pd.to_numeric(df["Age"], errors="coerce").astype("Int64")
+# usa pd.NA en vez de numpy.nan
+
 
 df["Age"] = df["Age"].fillna(df["Age"].median())
 
 AGE_MIN = 0
 AGE_MAX = 120
 
-ColorPrint(format(f"6.A) EDADES INVALIDAS:\n{df[(df['Age'] < AGE_MIN) | (df['Age'] > AGE_MAX)].sum()}"), COLORS.RED)
+invalid_ages = ((df['Age'] < AGE_MIN) | (df['Age'] > AGE_MAX)).sum()
+ColorPrint(format(f"6.A) EDADES INVALIDAS:\n{invalid_ages}"), COLORS.RED)
 
 #6.B)
-ColorPrint(format(f"6.B) 'Gender' CANTIDAD DE DATOS INVALIDOS:\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.RED)
+ColorPrint(format(f"6.B)\n> 'Gender' CANTIDAD DE DATOS INVALIDOS:\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.RED)
 ColorPrint(df["Gender"].value_counts(), COLORS.RED)
 
-ColorPrint(format(f"6.B) 'No-show' CANTIDAD DE DATOS INVALIDOS:\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.RED)
+ColorPrint(format(f"> 'No-show' CANTIDAD DE DATOS INVALIDOS:\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.RED)
 ColorPrint(df["No-show"].value_counts(), COLORS.RED)
 
 #6.C)
 
 #------------------------------------------------------------------------------------------
+
