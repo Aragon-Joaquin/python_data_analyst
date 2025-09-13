@@ -6,7 +6,8 @@
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
 
 from colorPrinter import ColorPrint, COLORS
 
@@ -165,4 +166,34 @@ ColorPrint(df["No-show"].value_counts(), COLORS.RED)
 #6.C)
 
 #------------------------------------------------------------------------------------------
+
+#7.A)
+
+#IQR (Q3 ​ −Q1) es el rango entre el primer quartil (25%) y el tercer cuartil (75%)
+#los outliers (valor atipico) son aquellos que no encajan por debajo de:
+# Q1 - 1.5 x IQR
+# o por arriba de:
+# Q3 + 1.5 * IQR
+
+quartilEdad_1 = df["Age"].quantile(0.25)
+quartilEdad_3 = df["Age"].quantile(0.75)
+edad_IQR = quartilEdad_1 - quartilEdad_3
+
+limite_menor = quartilEdad_1 - 1.5 * edad_IQR
+limite_mayor = quartilEdad_3 + 1.5 * edad_IQR
+
+val_atipicos = df[(df["Age"] < limite_menor) | (df["Age"] > limite_mayor)]
+
+fig, ax = plt.subplots()
+ax.boxplot(val_atipicos['Age'])
+ax.set_title('Age Outliers')
+ax.set_ylabel('Edades')
+
+plt.show()
+
+# Winsorizar: 
+# reemplaza los valores extremos (los mas altos y los mas bajos) por valores menos extremos
+
+df["Winzorizados"] = val_atipicos["Age"].clip(lower=val_atipicos["Age"].quantile(0.05), upper=val_atipicos["Age"].quantile(0.95))
+ColorPrint(format(f"7.C)\n> DATOS 'Age' WINSORIZADOS:\n{df["Winzorizados"]}"), COLORS.CYAN )
 
