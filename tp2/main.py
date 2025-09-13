@@ -94,6 +94,7 @@ df['DiffDays'] = df['DiffDays'].where(df['DiffDays'] >= 0, df['DiffDays'].mean()
 ColorPrint(format(f"4.C) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df['DiffDays']}"), COLORS.YELLOW)
 
 #------------------------------------------------------------------------------------------
+# La baja cardinalidad se refiere a columnas con pocos valores unicos.
 
 #5.A)
 ColorPrint(format(f"5.A) 'Gender' CARDINALIDAD :\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
@@ -128,13 +129,6 @@ df["No-show"] = df["No-show"].replace({
     pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
 })
 
-# La baja cardinalidad se refiere a columnas con pocos valores unicos.
-ColorPrint(format(f"5.C) 'Gender' TRAS REDUCCION DE DATOS INVALIDOS:\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
-ColorPrint(df["Gender"].value_counts(), COLORS.BLUE)
-
-ColorPrint(format(f"5.C) 'No-show' TRAS REDUCCION DE DATOS INVALIDOS:\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.BLUE)
-ColorPrint(df["No-show"].value_counts(), COLORS.BLUE)
-
 #5.B)
 gender_categories = CategoricalDtype(categories=[G_ANOTHER, G_FEMALE, G_MALE])
 noShow_categories = CategoricalDtype(categories=[NS_NO, NS_YES])
@@ -142,5 +136,28 @@ noShow_categories = CategoricalDtype(categories=[NS_NO, NS_YES])
 #5.D)
 df['DidAttend'] = df['No-show'].map({NS_NO: 0, NS_YES: 1})
 ColorPrint(format(f"5.D) COLUMNA 'DidAttend':\n{df["DidAttend"]}"), COLORS.BLUE)
+
+#------------------------------------------------------------------------------------------
+
+#6.A)
+
+df["Age"] = pd.to_numeric(df["Age"], errors="coerce").astype("UInt16") # UInt8 - 0 a 255
+# usa pd.NA en vez de numpy.nan, UINT16 Limite: 0 a 65535
+
+df["Age"] = df["Age"].fillna(df["Age"].median())
+
+AGE_MIN = 0
+AGE_MAX = 120
+
+ColorPrint(format(f"6.A) EDADES INVALIDAS:\n{df[(df['Age'] < AGE_MIN) | (df['Age'] > AGE_MAX)].sum()}"), COLORS.RED)
+
+#6.B)
+ColorPrint(format(f"6.B) 'Gender' CANTIDAD DE DATOS INVALIDOS:\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.RED)
+ColorPrint(df["Gender"].value_counts(), COLORS.RED)
+
+ColorPrint(format(f"6.B) 'No-show' CANTIDAD DE DATOS INVALIDOS:\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.RED)
+ColorPrint(df["No-show"].value_counts(), COLORS.RED)
+
+#6.C)
 
 #------------------------------------------------------------------------------------------
