@@ -5,6 +5,7 @@
 # 
 
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 # import matplotlib.pyplot as plt
 
 from colorPrinter import ColorPrint, COLORS
@@ -90,6 +91,56 @@ ColorPrint(format(f"4.B) COLUMNA DiffDays (AppointmentDay - ScheduledDay):\n{df[
 
 #4.C)
 df['DiffDays'] = df['DiffDays'].where(df['DiffDays'] >= 0, df['DiffDays'].mean())
-ColorPrint(format(f"4.B) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df['DiffDays']}"), COLORS.YELLOW)
+ColorPrint(format(f"4.C) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df['DiffDays']}"), COLORS.YELLOW)
+
+#------------------------------------------------------------------------------------------
+
+#5.A)
+ColorPrint(format(f"5.A) 'Gender' CARDINALIDAD :\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
+ColorPrint(format(f"5.A) 'No-Show' CARDINALIDAD :\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.BLUE)
+
+#5.C)
+#variables para genero
+G_MALE = "M"
+G_FEMALE = "F"
+G_ANOTHER = "OTRO"
+
+UNKNOWN = "DESCONOCIDO"
+
+#variables para No-Show
+NS_YES = "SI"
+NS_NO = "NO"
+
+df["Gender"] = (df["Gender"].astype("string").str.strip().str.upper())
+df["No-show"] = (df["No-show"].astype("string").str.upper())
+
+df["Gender"] = df["Gender"].replace({
+    "FEM":G_FEMALE, "FEMALE": G_FEMALE ,"FEMENINO": G_FEMALE, "MUJER": G_FEMALE,
+    "MASC": G_MALE, "MALE": G_MALE, "MASCULINO": G_MALE, "HOMBRE": G_MALE,
+    "OTHER": G_ANOTHER, 
+    pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
+})
+
+df["No-show"] = df["No-show"].replace({
+    "0": NS_NO, "N": NS_NO, "FALSE": NS_NO,
+    "1": NS_YES, "Y": NS_YES, "TRUE": NS_YES, "YES": NS_YES,
+
+    pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
+})
+
+# La baja cardinalidad se refiere a columnas con pocos valores unicos.
+ColorPrint(format(f"5.C) 'Gender' TRAS REDUCCION DE DATOS INVALIDOS:\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
+ColorPrint(df["Gender"].value_counts(), COLORS.BLUE)
+
+ColorPrint(format(f"5.C) 'No-show' TRAS REDUCCION DE DATOS INVALIDOS:\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.BLUE)
+ColorPrint(df["No-show"].value_counts(), COLORS.BLUE)
+
+#5.B)
+gender_categories = CategoricalDtype(categories=[G_ANOTHER, G_FEMALE, G_MALE])
+noShow_categories = CategoricalDtype(categories=[NS_NO, NS_YES])
+
+#5.D)
+df['DidAttend'] = df['No-show'].map({NS_NO: 0, NS_YES: 1})
+ColorPrint(format(f"5.D) COLUMNA 'DidAttend':\n{df["DidAttend"]}"), COLORS.BLUE)
 
 #------------------------------------------------------------------------------------------
