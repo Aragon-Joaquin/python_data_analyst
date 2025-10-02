@@ -175,17 +175,18 @@ ColorPrint(df["No-show"].value_counts(), COLORS.RED)
 # o por arriba de:
 # Q3 + 1.5 * IQR
 
-quartilEdad_1 = df["Age"].quantile(0.25)
-quartilEdad_3 = df["Age"].quantile(0.75)
-edad_IQR = quartilEdad_1 - quartilEdad_3
+def showAtipicos(df): 
+    quartil_1 = df.quantile(0.25)
+    quartil_3 = df.quantile(0.75)
+    IQR = quartil_3 - quartil_1
 
-limite_menor = quartilEdad_1 - 1.5 * edad_IQR
-limite_mayor = quartilEdad_3 + 1.5 * edad_IQR
+    limite_menor = quartil_1 - 1.5 * IQR
+    limite_mayor = quartil_3 + 1.5 * IQR
 
-val_atipicos = df[(df["Age"] < limite_menor) | (df["Age"] > limite_mayor)]
+    return (df < limite_menor) | (df > limite_mayor)    
 
 fig, ax = plt.subplots()
-ax.boxplot(val_atipicos['Age'])
+ax.boxplot(df['Age'][showAtipicos(df["Age"])])
 ax.set_title('Age Outliers')
 ax.set_ylabel('Edades')
 
@@ -193,7 +194,23 @@ plt.show()
 
 # Winsorizar: 
 # reemplaza los valores extremos (los mas altos y los mas bajos) por valores menos extremos
+df["AgeWinzor"] = df['Age'].clip(lower= df['Age'].quantile(0.05), upper=df['Age'].quantile(0.95))
 
-df["Winzorizados"] = val_atipicos["Age"].clip(lower=val_atipicos["Age"].quantile(0.05), upper=val_atipicos["Age"].quantile(0.95))
-ColorPrint(format(f"7.C)\n> DATOS 'Age' WINSORIZADOS:\n{df["Winzorizados"]}"), COLORS.CYAN )
+ColorPrint(format(f"7.C)\n> DATOS 'Age' WINSORIZADOS:"), COLORS.CYAN )
+ColorPrint(format(f"NO WINSORIZADOS: {df['Age'].min()}MIN, {df['Age'].max()}MAX"), COLORS.CYAN )
+ColorPrint(format(f"WINSORIZADOS: {df['AgeWinzor'].min()}MIN, {df['AgeWinzor'].max()}MAX"), COLORS.CYAN )
 
+
+fig, ax = plt.subplots()
+ax.boxplot(df['DiffDays'][showAtipicos(df["DiffDays"])])
+ax.set_title('DiffDays Outliers')
+ax.set_ylabel('Diferencia de dias')
+
+plt.show()
+
+#excluimos los outliers
+df['DaysDeleted'] = df["DiffDays"][(df["DiffDays"] < df['DiffDays'].quantile(0.95)) & (df["DiffDays"] > df["DiffDays"].quantile(0.05))]
+
+ColorPrint(format(f"> DATOS 'DiffDays' ELIMINADOS/EXCLUIDOS:"), COLORS.CYAN )
+ColorPrint(format(f"NO ELIMINADOS: {df['DiffDays'].min()}MIN, {df['DiffDays'].max()}MAX"), COLORS.CYAN )
+ColorPrint(format(f"ELIMINADOS/EXCLUIDOS: {df['DaysDeleted'].min()}MIN, {df['DaysDeleted'].max()}MAX"), COLORS.CYAN )
