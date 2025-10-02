@@ -214,3 +214,23 @@ df['DaysDeleted'] = df["DiffDays"][(df["DiffDays"] < df['DiffDays'].quantile(0.9
 ColorPrint(format(f"> DATOS 'DiffDays' ELIMINADOS/EXCLUIDOS:"), COLORS.CYAN )
 ColorPrint(format(f"NO ELIMINADOS: {df['DiffDays'].min()}MIN, {df['DiffDays'].max()}MAX"), COLORS.CYAN )
 ColorPrint(format(f"ELIMINADOS/EXCLUIDOS: {df['DaysDeleted'].min()}MIN, {df['DaysDeleted'].max()}MAX"), COLORS.CYAN )
+
+#------------------------------------------------------------------------------------------
+
+#8.A)
+edad_promedio = df.groupby("Gender", as_index=False)['Age'].mean()
+edad_mediana = df.groupby("Gender", as_index=False)['Age'].median()
+
+ColorPrint(format(f"8.A)\n> EdadPromedia: {edad_promedio}"), COLORS.YELLOW )
+ColorPrint(format(f"> EdadMedia: {edad_mediana}"), COLORS.YELLOW )
+
+#8.B)
+
+tiempo_espera = df.groupby('DidAttend')['DiffDays'].mean()
+
+ColorPrint(format(f"8.B)\n> Tiempo de espera promedio: {tiempo_espera}"), COLORS.YELLOW )
+
+#8.C)
+
+# res = df.groupby('EstadoTurno')['No-show'].agg(["count", ""])
+# ColorPrint(format(f"8.C)\n> aggregation method de pandas: {res}"), COLORS.YELLOW )
