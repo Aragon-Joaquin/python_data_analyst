@@ -8,7 +8,6 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 import matplotlib.pyplot as plt
 
-
 from colorPrinter import ColorPrint, COLORS
 
 # 1.A)
@@ -37,24 +36,21 @@ valores_remplazables = ["NA", "N/A", "-", "na", "Desconocido"]
 df.replace(valores_remplazables, pd.NA, inplace=True)
 
 #2.C)
-
-#todo: reducir boilerplate
-edad_mediana = df['Age'].fillna(df['Age'].median())
-edad_media = df['Age'].fillna(df['Age'].mean())
-edad_std = df['Age'].fillna(df['Age'].std())
-
 edad_por_genero = df.groupby('Gender', dropna=False)['Age'].median()
 
 ColorPrint(format(f"2.C) GENERO PROMEDIADO EN EDAD:\n{edad_por_genero}"), COLORS.CYAN)
 
 #2.D)
 
+def fillAge(operation):
+    return df['Age'].fillna(operation)
+
 ColorPrint(format(f"2.D) EDAD ANTES:\n{df['Age']}"), COLORS.CYAN)
 
 ColorPrint(format(f"2.D) EDAD DESPUES:\n"), COLORS.CYAN)
-ColorPrint(format(f"-----MEDIA-----\n               {edad_media}"), COLORS.CYAN)
-ColorPrint(format(f"-----MEDIANA-----\n             {edad_mediana}"), COLORS.CYAN)
-ColorPrint(format(f"-----DESVIACION ESTANDAR-----\n {edad_std}"), COLORS.CYAN)
+ColorPrint(format(f"-----MEDIA-----\n               {fillAge(df['Age'].mean())}"), COLORS.CYAN)
+ColorPrint(format(f"-----MEDIANA-----\n             {fillAge(df['Age'].median())}"), COLORS.CYAN)
+ColorPrint(format(f"-----DESVIACION ESTANDAR-----\n {fillAge(df['Age'].std())}"), COLORS.CYAN)
 
 #------------------------------------------------------------------------------------------
 
@@ -72,21 +68,14 @@ ColorPrint(format(f"3.C) TRAS BORRAR DUPLICADOS EXACTOS:\n{df.duplicated().sum()
 #------------------------------------------------------------------------------------------
 
 #4.A)
+formatDate = '%d/%m/%Y' #or "ISO8601"
 
-#TODO: REDO THIS!! 
-s = df["ScheduledDay"].astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
-a = df["AppointmentDay"].astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
+def transformToDate(dtName):
+    strippedDays = dtName.astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
+    return pd.to_datetime(strippedDays, dayfirst=True, errors='coerce', format=formatDate) 
 
-formatDate = "ISO8601" #or '%d/%m/%Y', idk
-
-dtScheduled = pd.to_datetime(s, dayfirst=True, errors='coerce', format=formatDate) 
-dtAppointment = pd.to_datetime(a, dayfirst=True, errors='coerce', format=formatDate)
-
-maskS = dtScheduled.isna() & s.notna()
-dtScheduled = dtScheduled.fillna(pd.to_datetime(s.where(maskS), errors="coerce", utc=True, dayfirst=True, format=formatDate))
-
-maskA = dtAppointment.isna() & a.notna()
-dtAppointment = dtAppointment.fillna(pd.to_datetime(s.where(maskA), errors="coerce", utc=True, dayfirst=True, format=formatDate))
+dtScheduled = transformToDate(df["ScheduledDay"])
+dtAppointment = transformToDate(df["AppointmentDay"])
 
 #4.B)
 df['DiffDays'] = (dtAppointment - dtScheduled).dt.days
@@ -232,5 +221,5 @@ ColorPrint(format(f"8.B)\n> Tiempo de espera promedio: {tiempo_espera}"), COLORS
 
 #8.C)
 
-# res = df.groupby('EstadoTurno')['No-show'].agg(["count", ""])
-# ColorPrint(format(f"8.C)\n> aggregation method de pandas: {res}"), COLORS.YELLOW )
+res = df.groupby('EstadoTurno')['Age'].agg(["count", "nunique", "min", "max"])
+ColorPrint(format(f"8.C)\n> aggregation method de pandas: {res}"), COLORS.YELLOW )
