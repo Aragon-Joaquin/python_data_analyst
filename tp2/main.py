@@ -82,7 +82,7 @@ formatDate = '%d/%m/%Y' #o "ISO8601"
 def transformToDate(dtName):
     strippedDays = dtName.astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
     dt = pd.to_datetime(strippedDays, errors="coerce", format="ISO8601").dt.tz_localize(None)
-    dt2 = pd.to_datetime(strippedDays.where(dt.isna()), errors="coerce", for<mat=formatDate, dayfirst=True).dt.tz_localize(None)
+    dt2 = pd.to_datetime(strippedDays.where(dt.isna()), errors="coerce", format=formatDate, dayfirst=True).dt.tz_localize(None)
     return dt.fillna(dt2)
 
 dtScheduled = transformToDate(df["ScheduledDay"])
