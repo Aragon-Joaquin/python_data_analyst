@@ -27,21 +27,25 @@ ColorPrint(format(f"1.C) DATOS INFERIDOS DEL DATAFRAME:\n{df.dtypes}"), COLORS.G
 #------------------------------------------------------------------------------------------
 
 #2.A)
+# cantidad de nulos que hay en el dataFrame
 ColorPrint(format(f"2.A) NULOS ACTUALES:\n{df.isna().sum()}"), COLORS.CYAN)
 
 #2.B)
+#transformamos las edades a numericos
 df['Age'] = df['Age'].apply(pd.to_numeric, errors='coerce')
 
+#a las edades que dieron error porque eran string, reemplazamos su valor por el nulo de Pandas
 valores_remplazables = ["NA", "N/A", "-", "na", "Desconocido"]
 df.replace(valores_remplazables, pd.NA, inplace=True)
 
 #2.C)
+#seleccionamos todas las edades y la agrupamos por cada genero diferente 
+# para luego calcular la media de edad por genero
 edad_por_genero = df.groupby('Gender', dropna=False)['Age'].median()
 
 ColorPrint(format(f"2.C) GENERO PROMEDIADO EN EDAD:\n{edad_por_genero}"), COLORS.CYAN)
 
 #2.D)
-
 def fillAge(operation):
     return df['Age'].fillna(operation)
 
@@ -55,22 +59,28 @@ ColorPrint(format(f"-----DESVIACION ESTANDAR-----\n {fillAge(df['Age'].std())}")
 #------------------------------------------------------------------------------------------
 
 #3.A)
+# la suma de duplicados actuales
 ColorPrint(format(f"3.A) DUPLICADOS TOTAL:\n{df.duplicated().sum()}"), COLORS.MAGENTA)
 
 #3.B)
+#seleccionamos los duplicados de PatientId y AppointmentID y lo sumamos
 ColorPrint(format(f"3.B) DUPLICADOS EN PatientId y AppointmentID:\n{df.duplicated(subset=["PatientId", "AppointmentID"]).sum()}"), COLORS.MAGENTA)
 
 #3.C)
+# la razon por la cual eliminamos todos los duplicados excepto los primeros es debido a que pudo haber sido un error de un registro doble.
 df.drop_duplicates(inplace=True,keep="first")
 ColorPrint(format(f"3.C) TRAS BORRAR DUPLICADOS EXACTOS:\n{df.duplicated().sum()} restantes"), COLORS.MAGENTA)
-# la razon por la cual eliminamos todos los duplicados excepto los primeros es debido a que pudo haber sido un error de un registro doble.
+
 
 #------------------------------------------------------------------------------------------
 
 #4.A)
-formatDate = '%d/%m/%Y' #or "ISO8601"
+#indicamos el tipo de fecha que usaremos para parsear los datos, esta fecha seria algo asi: 30/12/2025
+formatDate = '%d/%m/%Y' #o "ISO8601"
 
+# definimos una funcion para ahorrarnos repetir lineas
 def transformToDate(dtName):
+    #eliminamos espacios y luego los parseamos a fecha, indicando que el primer dato es un dia
     strippedDays = dtName.astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
     return pd.to_datetime(strippedDays, dayfirst=True, errors='coerce', format=formatDate) 
 
@@ -78,10 +88,12 @@ dtScheduled = transformToDate(df["ScheduledDay"])
 dtAppointment = transformToDate(df["AppointmentDay"])
 
 #4.B)
+# obtenemos la diferencia de dias
 df['DiffDays'] = (dtAppointment - dtScheduled).dt.days
 ColorPrint(format(f"4.B) COLUMNA DiffDays (AppointmentDay - ScheduledDay):\n{df['DiffDays']}"), COLORS.YELLOW)
 
 #4.C)
+# reemplazamos la diferencia de dias menor a 0 por su media  
 df['DiffDays'] = df['DiffDays'].where(df['DiffDays'] >= 0, df['DiffDays'].mean())
 ColorPrint(format(f"4.C) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df['DiffDays']}"), COLORS.YELLOW)
 
@@ -89,6 +101,7 @@ ColorPrint(format(f"4.C) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df[
 # La baja cardinalidad se refiere a columnas con pocos valores unicos.
 
 #5.A)
+#imprimimos en pantalla los valores unicos de cada columna antes de parsearlos
 ColorPrint(format(f"5.A)\n> 'Gender' CARDINALIDAD :\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.BLUE)
 ColorPrint(format(f"> 'No-Show' CARDINALIDAD :\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.BLUE)
 
@@ -104,9 +117,11 @@ UNKNOWN = "DESCONOCIDO"
 NS_YES = "SI"
 NS_NO = "NO"
 
+#eliminamos espacios en blanco del principio y fin y ponemos todos los valores en mayuscula
 df["Gender"] = (df["Gender"].astype("string").str.strip().str.upper())
 df["No-show"] = (df["No-show"].astype("string").str.strip().str.upper())
 
+#reemplazamos posibles valores incorrectos por nuestras variables 
 df["Gender"] = df["Gender"].replace({
     "FEM":G_FEMALE, "FEMALE": G_FEMALE ,"FEMENINO": G_FEMALE, "MUJER": G_FEMALE,
     "MASC": G_MALE, "MALE": G_MALE, "MASCULINO": G_MALE, "HOMBRE": G_MALE,
@@ -122,8 +137,15 @@ df["No-show"] = df["No-show"].replace({
 })
 
 #5.B)
-gender_categories = CategoricalDtype(categories=[G_ANOTHER, G_FEMALE, G_MALE])
-noShow_categories = CategoricalDtype(categories=[NS_NO, NS_YES])
+#indica que solo dicha columna puede tener esos valores
+gender_categories = CategoricalDtype(categories=[G_ANOTHER, G_FEMALE, G_MALE, UNKNOWN])
+noShow_categories = CategoricalDtype(categories=[NS_NO, NS_YES, UNKNOWN])
+
+df["Gender"] = df["Gender"].astype(gender_categories)
+df["No-show"] = df["No-show"].astype(noShow_categories)
+
+ColorPrint(format(f">5.B)\n COLUMNA 'Gender' EN CATEGORIA:\n{df["Gender"]}"), COLORS.BLUE)
+ColorPrint(format(f"COLUMNA 'No-show' EN CATEGORIA:\n{df["No-show"]}"), COLORS.BLUE)
 
 #5.D)
 df['DidAttend'] = df['No-show'].map({NS_NO: 0, NS_YES: 1})
@@ -133,26 +155,34 @@ ColorPrint(format(f"5.D) COLUMNA 'DidAttend':\n{df["DidAttend"]}"), COLORS.BLUE)
 
 #6.A)
 
+# Int64 usa pd.NA en vez de numpy.nan
 df["Age"] = pd.to_numeric(df["Age"], errors="coerce").astype("Int64")
-# usa pd.NA en vez de numpy.nan
 
 
+# los valores nulos ahora seran la media
 df["Age"] = df["Age"].fillna(df["Age"].median())
 
 AGE_MIN = 0
 AGE_MAX = 120
 
+# seleccionamos las edades menores a 0 y mayor a 120 y sumamos su cantidad total
 invalid_ages = ((df['Age'] < AGE_MIN) | (df['Age'] > AGE_MAX)).sum()
 ColorPrint(format(f"6.A) EDADES INVALIDAS:\n{invalid_ages}"), COLORS.RED)
 
 #6.B)
-ColorPrint(format(f"6.B)\n> 'Gender' CANTIDAD DE DATOS INVALIDOS:\n{df["Gender"].nunique()} VALORES UNICOS"), COLORS.RED)
-ColorPrint(df["Gender"].value_counts(), COLORS.RED)
+gender_invalids = df["Gender"].isna().sum()
+ColorPrint(format(f"6.B)\n> 'Gender' CANTIDAD DE DATOS INVALIDOS:\n{gender_invalids}"), COLORS.RED)
 
-ColorPrint(format(f"> 'No-show' CANTIDAD DE DATOS INVALIDOS:\n{df["No-show"].nunique()} VALORES UNICOS"), COLORS.RED)
-ColorPrint(df["No-show"].value_counts(), COLORS.RED)
+noshow_invalids = df["No-show"].isna().sum()
+ColorPrint(format(f"> 'No-show' CANTIDAD DE DATOS INVALIDOS:\n {noshow_invalids}"), COLORS.RED)
 
 #6.C)
+#rellenamos los valores nulos con el valor "Desconocido" que anteriormente habiamos declarado
+df["Gender"] = df["Gender"].fillna(UNKNOWN)
+df["No-show"] = df["No-show"].fillna(UNKNOWN)
+
+ColorPrint(format(f"6.C)\n> 'Gender' CANTIDAD DE VALORES UNICOS:\n{df["Gender"].nunique()}"), COLORS.RED)
+ColorPrint(format(f"> 'No-show' CANTIDAD DE VALORES UNICOS:\n{df["No-show"].nunique()}"), COLORS.RED)
 
 #------------------------------------------------------------------------------------------
 
@@ -165,13 +195,17 @@ ColorPrint(df["No-show"].value_counts(), COLORS.RED)
 # Q3 + 1.5 * IQR
 
 def showAtipicos(df): 
+    #calculamos el 25% y el 75% + el IQR 
     quartil_1 = df.quantile(0.25)
     quartil_3 = df.quantile(0.75)
     IQR = quartil_3 - quartil_1
-
+    
+    #definimos nuestros limites
     limite_menor = quartil_1 - 1.5 * IQR
     limite_mayor = quartil_3 + 1.5 * IQR
 
+    #retornamos los valores que son menores al limite menor y mayores al limite mayor
+    # es decir, retornamos solo los valores invalidos
     return (df < limite_menor) | (df > limite_mayor)    
 
 fig, ax = plt.subplots()
@@ -186,10 +220,13 @@ plt.show()
 df["AgeWinzor"] = df['Age'].clip(lower= df['Age'].quantile(0.05), upper=df['Age'].quantile(0.95))
 
 ColorPrint(format(f"7.C)\n> DATOS 'Age' WINSORIZADOS:"), COLORS.CYAN )
+
+# mostramos los valores mas bajos y altos ANTES y DESPUES de winsorizar
 ColorPrint(format(f"NO WINSORIZADOS: {df['Age'].min()}MIN, {df['Age'].max()}MAX"), COLORS.CYAN )
 ColorPrint(format(f"WINSORIZADOS: {df['AgeWinzor'].min()}MIN, {df['AgeWinzor'].max()}MAX"), COLORS.CYAN )
 
 
+#hacemos lo mismo pero con DiffDays
 fig, ax = plt.subplots()
 ax.boxplot(df['DiffDays'][showAtipicos(df["DiffDays"])])
 ax.set_title('DiffDays Outliers')
@@ -220,6 +257,10 @@ tiempo_espera = df.groupby('DidAttend')['DiffDays'].mean()
 ColorPrint(format(f"8.B)\n> Tiempo de espera promedio: {tiempo_espera}"), COLORS.YELLOW )
 
 #8.C)
-
+#agrupamos las edades por cada estado de turno diferente y obtenemos los siguientes valores:
+# - cuantos datos hay en total
+# - cuantos datos son unicos
+# - el dato menor
+# - el dato mayor
 res = df.groupby('EstadoTurno')['Age'].agg(["count", "nunique", "min", "max"])
-ColorPrint(format(f"8.C)\n> aggregation method de pandas: {res}"), COLORS.YELLOW )
+ColorPrint(format(f"8.C)\n> metodo Aggregation de pandas: {res}"), COLORS.YELLOW )
