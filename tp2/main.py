@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # TP2 - Aragon Joaquin, Gómez Nicolas Miguel,
-#       Marraccini Daniel, Vazquez Federico. 
+#       ,Vazquez Federico. 
 # 
 
 import pandas as pd
