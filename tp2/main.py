@@ -80,9 +80,10 @@ formatDate = '%d/%m/%Y' #o "ISO8601"
 
 # definimos una funcion para ahorrarnos repetir lineas
 def transformToDate(dtName):
-    #eliminamos espacios y luego los parseamos a fecha, indicando que el primer dato es un dia
     strippedDays = dtName.astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
-    return pd.to_datetime(strippedDays, dayfirst=True, errors='coerce', format=formatDate) 
+    dt = pd.to_datetime(strippedDays, errors="coerce", format="ISO8601").dt.tz_localize(None)
+    dt2 = pd.to_datetime(strippedDays.where(dt.isna()), errors="coerce", for<mat=formatDate, dayfirst=True).dt.tz_localize(None)
+    return dt.fillna(dt2)
 
 dtScheduled = transformToDate(df["ScheduledDay"])
 dtAppointment = transformToDate(df["AppointmentDay"])
