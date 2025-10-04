@@ -41,17 +41,17 @@ df.replace(valores_remplazables, pd.NA, inplace=True)
 #2.C)
 #seleccionamos todas las edades y la agrupamos por cada genero diferente 
 # para luego calcular la media de edad por genero
-edad_por_genero = df.groupby('Gender', dropna=False)['Age'].median()
+edad_por_genero = df.groupby('Gender', dropna=False)['Age']
 
-ColorPrint(format(f"2.C) GENERO PROMEDIADO EN EDAD:\n{edad_por_genero}"), COLORS.CYAN)
+ColorPrint(format(f"2.C)\n> GENERO PROMEDIADO EN EDAD:\n{edad_por_genero.median()}"), COLORS.CYAN)
 
 #2.D)
 def fillAge(operation):
-    return df['Age'].fillna(operation)
+    return edad_por_genero.fillna(operation)
 
-ColorPrint(format(f"2.D) EDAD ANTES:\n{df['Age']}"), COLORS.CYAN)
+ColorPrint(format(f"2.D) EDAD POR GENERO ANTES:\n{df['Age']}"), COLORS.CYAN)
 
-ColorPrint(format(f"2.D) EDAD DESPUES:\n"), COLORS.CYAN)
+ColorPrint(format(f"2.D) EDAD POR GENERO DESPUES:\n"), COLORS.CYAN)
 ColorPrint(format(f"-----MEDIA-----\n               {fillAge(df['Age'].mean())}"), COLORS.CYAN)
 ColorPrint(format(f"-----MEDIANA-----\n             {fillAge(df['Age'].median())}"), COLORS.CYAN)
 ColorPrint(format(f"-----DESVIACION ESTANDAR-----\n {fillAge(df['Age'].std())}"), COLORS.CYAN)
@@ -81,12 +81,17 @@ formatDate = '%d/%m/%Y' #o "ISO8601"
 # definimos una funcion para ahorrarnos repetir lineas
 def transformToDate(dtName):
     strippedDays = dtName.astype("string").str.strip().str.replace("\u00A0", " ", regex=False)
-    dt = pd.to_datetime(strippedDays, errors="coerce", format="ISO8601").dt.tz_localize(None)
+    dt = pd.to_datetime(strippedDays, errors="coerce", dayfirst=True, format="ISO8601").dt.tz_localize(None)
     dt2 = pd.to_datetime(strippedDays.where(dt.isna()), errors="coerce", format=formatDate, dayfirst=True).dt.tz_localize(None)
     return dt.fillna(dt2)
 
 dtScheduled = transformToDate(df["ScheduledDay"])
 dtAppointment = transformToDate(df["AppointmentDay"])
+dtFechaLibre = transformToDate(df["FechaLibre"])
+
+ColorPrint(format(f"4.A)\n>COLUMNA ScheduledDay PARSEADA:\n{dtScheduled}"), COLORS.YELLOW)
+ColorPrint(format(f"COLUMNA AppointmentDay PARSEADA:\n{dtAppointment}"), COLORS.YELLOW)
+ColorPrint(format(f"COLUMNA FechaLibre PARSEADA:\n{dtFechaLibre}"), COLORS.YELLOW)
 
 #4.B)
 # obtenemos la diferencia de dias
@@ -94,8 +99,9 @@ df['DiffDays'] = (dtAppointment - dtScheduled).dt.days
 ColorPrint(format(f"4.B) COLUMNA DiffDays (AppointmentDay - ScheduledDay):\n{df['DiffDays']}"), COLORS.YELLOW)
 
 #4.C)
-# reemplazamos la diferencia de dias menor a 0 por su media  
-df['DiffDays'] = df['DiffDays'].where(df['DiffDays'] >= 0, df['DiffDays'].mean())
+# reemplazamos la diferencia de dias menor a 0 por su media 
+mediana_diffDays = df['DiffDays'].where(df['DiffDays'] >= 0).mean()
+df['DiffDays'] = df['DiffDays'].where(df['DiffDays'] >= 0, mediana_diffDays)
 ColorPrint(format(f"4.C) VALORES 0 DE DiffDays REEMPLAZADOS POR LA MEDIA :\n{df['DiffDays']}"), COLORS.YELLOW)
 
 #------------------------------------------------------------------------------------------
@@ -118,9 +124,17 @@ UNKNOWN = "DESCONOCIDO"
 NS_YES = "SI"
 NS_NO = "NO"
 
+#variables para estado-turno
+ET_PROGRAMMED = "PROGRAMADO"
+ET_ATTENDED = "ATENDIDO"
+ET_PENDING = "PENDIENTE"
+ET_CANCELLED = "CANCELADO"
+ET_REPROGRAM = "REPROGRAMADO"
+
 #eliminamos espacios en blanco del principio y fin y ponemos todos los valores en mayuscula
 df["Gender"] = (df["Gender"].astype("string").str.strip().str.upper())
 df["No-show"] = (df["No-show"].astype("string").str.strip().str.upper())
+df["EstadoTurno"] = (df["EstadoTurno"].astype("string").str.strip().str.upper())
 
 #reemplazamos posibles valores incorrectos por nuestras variables 
 df["Gender"] = df["Gender"].replace({
@@ -137,16 +151,23 @@ df["No-show"] = df["No-show"].replace({
     pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
 })
 
+df["EstadoTurno"] = df["EstadoTurno"].replace({
+    pd.NA: UNKNOWN, "X": UNKNOWN, "??": UNKNOWN
+})
+
 #5.B)
 #indica que solo dicha columna puede tener esos valores
 gender_categories = CategoricalDtype(categories=[G_ANOTHER, G_FEMALE, G_MALE, UNKNOWN])
 noShow_categories = CategoricalDtype(categories=[NS_NO, NS_YES, UNKNOWN])
+estadoTurno_categories = CategoricalDtype(categories=[ET_PROGRAMMED, ET_ATTENDED, ET_PENDING,ET_CANCELLED,ET_REPROGRAM,UNKNOWN])
 
 df["Gender"] = df["Gender"].astype(gender_categories)
 df["No-show"] = df["No-show"].astype(noShow_categories)
+df["EstadoTurno"] = df["EstadoTurno"].astype(estadoTurno_categories)
 
 ColorPrint(format(f">5.B)\n COLUMNA 'Gender' EN CATEGORIA:\n{df["Gender"]}"), COLORS.BLUE)
 ColorPrint(format(f"COLUMNA 'No-show' EN CATEGORIA:\n{df["No-show"]}"), COLORS.BLUE)
+ColorPrint(format(f"COLUMNA 'EstadoTurno' EN CATEGORIA:\n{df["EstadoTurno"]}"), COLORS.BLUE)
 
 #5.D)
 df['DidAttend'] = df['No-show'].map({NS_NO: 0, NS_YES: 1})
@@ -182,8 +203,12 @@ ColorPrint(format(f"> 'No-show' CANTIDAD DE DATOS INVALIDOS:\n {noshow_invalids}
 df["Gender"] = df["Gender"].fillna(UNKNOWN)
 df["No-show"] = df["No-show"].fillna(UNKNOWN)
 
+#eliminamos las edades invalidas
+df["Age"] = df["Age"].clip(lower=AGE_MIN, upper=AGE_MAX)
+
 ColorPrint(format(f"6.C)\n> 'Gender' CANTIDAD DE VALORES UNICOS:\n{df["Gender"].nunique()}"), COLORS.RED)
 ColorPrint(format(f"> 'No-show' CANTIDAD DE VALORES UNICOS:\n{df["No-show"].nunique()}"), COLORS.RED)
+ColorPrint(format(f"> ELIMINAMOS 'Age' INVALIDOS:\n{df["Age"].min()}MIN, {df["Age"].max()}MAX "), COLORS.RED)
 
 #------------------------------------------------------------------------------------------
 
@@ -202,15 +227,22 @@ def showAtipicos(df):
     IQR = quartil_3 - quartil_1
     
     #definimos nuestros limites
-    limite_menor = quartil_1 - 1.5 * IQR
-    limite_mayor = quartil_3 + 1.5 * IQR
+    limite_menor = float(quartil_1 - 1.5 * IQR)
+    limite_mayor = float(quartil_3 + 1.5 * IQR)
 
-    #retornamos los valores que son menores al limite menor y mayores al limite mayor
-    # es decir, retornamos solo los valores invalidos
-    return (df < limite_menor) | (df > limite_mayor)    
+    
+    #enmascaramos los valores que son menores al limite menor y mayores al limite mayor
+    # es decir, solo los valores invalidos
+    outliers_mask = (df < limite_menor) | (df > limite_mayor)
+
+    return outliers_mask, limite_menor, limite_mayor   
 
 fig, ax = plt.subplots()
-ax.boxplot(df['Age'][showAtipicos(df["Age"])])
+
+
+ageAtipicos, AgeLMenor, AgeLMayor = showAtipicos(df["Age"])
+
+ax.boxplot(df['Age'][ageAtipicos])
 ax.set_title('Age Outliers')
 ax.set_ylabel('Edades')
 
@@ -218,7 +250,7 @@ plt.show()
 
 # Winsorizar: 
 # reemplaza los valores extremos (los mas altos y los mas bajos) por valores menos extremos
-df["AgeWinzor"] = df['Age'].clip(lower= df['Age'].quantile(0.05), upper=df['Age'].quantile(0.95))
+df["AgeWinzor"] = df['Age'].clip(lower=AgeLMenor, upper=AgeLMayor)
 
 ColorPrint(format(f"7.C)\n> DATOS 'Age' WINSORIZADOS:"), COLORS.CYAN )
 
@@ -228,15 +260,21 @@ ColorPrint(format(f"WINSORIZADOS: {df['AgeWinzor'].min()}MIN, {df['AgeWinzor'].m
 
 
 #hacemos lo mismo pero con DiffDays
+daysAtipicos, daysLMenor, daysLMayor = showAtipicos(df["DiffDays"])
+
 fig, ax = plt.subplots()
-ax.boxplot(df['DiffDays'][showAtipicos(df["DiffDays"])])
+ax.boxplot(df['DiffDays'][daysAtipicos])
 ax.set_title('DiffDays Outliers')
 ax.set_ylabel('Diferencia de dias')
 
 plt.show()
 
 #excluimos los outliers
-df['DaysDeleted'] = df["DiffDays"][(df["DiffDays"] < df['DiffDays'].quantile(0.95)) & (df["DiffDays"] > df["DiffDays"].quantile(0.05))]
+mask_noeliminados = (df["DiffDays"] < daysLMayor) & (df["DiffDays"] > daysLMenor)
+
+# days deleted dará NaN debido a la cantidad de numeros de similar valor
+# eso afectara que los cuartiles sean identicos
+df["DaysDeleted"] = df["DiffDays"].where(mask_noeliminados)
 
 ColorPrint(format(f"> DATOS 'DiffDays' ELIMINADOS/EXCLUIDOS:"), COLORS.CYAN )
 ColorPrint(format(f"NO ELIMINADOS: {df['DiffDays'].min()}MIN, {df['DiffDays'].max()}MAX"), COLORS.CYAN )
