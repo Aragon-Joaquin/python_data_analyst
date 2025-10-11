@@ -11,4 +11,4 @@ import matplotlib.pyplot as plt
 from colorPrinter import ColorPrint, COLORS
 
 # 1.A)
-df = pd.read_csv('./mock/AllGPUS.csv')
+df = pd.read_csv('./mock/All_GPUs.csv')
