@@ -1,4 +1,6 @@
 #campos skippeados: Power_Connector
+import pandas as pd
+from pandas.api.types import CategoricalDtype
 
 def ParseFields(dataFrame):
     df = dataFrame.copy()
@@ -7,19 +9,21 @@ def ParseFields(dataFrame):
     df = df_stringified.apply(lambda x: x.str.strip()) #por cada columna, le eliminamos espacios redundantes
 
     #! reemplazar strings
-    df['Best_Resolution'] = df['Best_Resolution'].str.replace(' ', '')
-
+    df[['Best_Resolution','Resolution_WxH']] = df[['Best_Resolution', 'Resolution_WxH']].apply(
+        lambda x: x.str.replace(' ', '').str.replace('nan', '').replace('', pd.NA)
+    )
 
     #! columnas numericas
     # Medidas en MHz
     df[['Boost_Clock', 'Core_Speed', "Memory_Speed"]] = df[['Boost_Clock', 'Core_Speed','Memory_Speed']] \
-        .apply(lambda x:  pd.to_numeric(x.str.replace(' MHz', ''), errors='coerce').astype('Int64')) # son todos medidos en MHz
+        .apply(lambda x: pd.to_numeric(x.str.replace(' MHz', ''), errors='coerce').astype('Int32')) # son todos medidos en MHz
 
     #direct_x
     df['Direct_X'] = pd.to_numeric(
         df['Direct_X'].str.replace('DX ', ''),  # medido en DX (redundante)
         errors='coerce'
-    )
+    ).astype('float32')
+
     #cache
     L2_CacheSplit = df['L2_Cache'].str.split('(', n=1, expand=True) # 1024KB(x2) -> ['1024KB', 'x2)']
 
@@ -45,7 +49,7 @@ def ParseFields(dataFrame):
 
     # memory bandwidth
     df['Memory_Bandwidth_GBps'] = df['Memory_Bandwidth'].str.replace('GB/sec', '').str.replace('MB/sec', '').str.strip()
-    df['Memory_Bandwidth_GBps'] =  df['Memory_Bandwidth_GBps'].astype("Int64", errors="ignore")
+    df['Memory_Bandwidth_GBps'] = pd.to_numeric(df['Memory_Bandwidth_GBps'], errors='coerce').astype('float32')
 
     mask_MBps = df['Memory_Bandwidth'].str.contains('MB/sec', na=False)
     df.loc[mask_MBps, 'Memory_Bandwidth_GBps'] = df.loc[mask_MBps, 'Memory_Bandwidth_GBps'] / 1024
@@ -62,23 +66,24 @@ def ParseFields(dataFrame):
     df['PSU_W'] = df['PSU_W'].str.replace('Watts', '').str.strip()
     df['PSU_Amps'] = df['PSU_Amps'].str.replace('Amps', '').str.strip()
 
-    df[['PSU_W','PSU_Amps']] = pd.to_numeric(df[['PSU_W', 'PSU_Amps']], errors='coerce')
+    df[['PSU_W', 'PSU_Amps']] = df[['PSU_W', 'PSU_Amps']].apply(
+        lambda col: pd.to_numeric(col, errors='coerce')
+    ).astype('Int32')
 
     #pixel rate
     df['Pixel_Rate'] = df['Pixel_Rate'].str.replace('GPixels/s', '').str.strip()
-    df['Pixel_Rate'] = pd.to_numeric(df['Pixel_Rate'], errors='coerce')
+    df['Pixel_Rate'] = pd.to_numeric(df['Pixel_Rate'], errors='coerce').astype('Int32')
 
     #process
     df['Process'] = df['Process'].str.replace('nm', '').str.strip()
-    df['Process'] = pd.to_numeric(df['Process'], errors='coerce')
-    df['Process'] = pd.to_numeric(df['Process'], errors='coerce')
+    df['Process'] = pd.to_numeric(df['Process'], errors='coerce').astype('Int32')
 
     #ROPS
     #Los valores de ROPs pueden ser por ejemplo: 8 (x2),32,
     #es decir, puede haber o no, una cantidad entre parentesis que indica la cantidad de bloques  por lo tanto, creamos dos nuevas columnas "ROPs" y "ROPs_Blocks"
     df[['ROPs', 'ROPs_Blocks']] = df['ROPs'].str.split('(', n=1, expand=True) # 8 (x2) -> ['8 ', 'x2)']
     df['ROPs'] = df['ROPs'].str.strip()
-    df['ROPs'] = pd.to_numeric(df['ROPs'], errors='coerce')
+    df['ROPs'] = pd.to_numeric(df['ROPs'], errors='coerce').astype('Int32')
     df['ROPs_Blocks'] = df['ROPs_Blocks'].str.strip().str.replace('x', '').str.replace(')', '')
     df['ROPs_Blocks'] = df['ROPs_Blocks'].fillna('1') # si no tiene bloques, es 1
 
@@ -87,18 +92,21 @@ def ParseFields(dataFrame):
 
     #Release_Price
     df['Release_Price'] = df['Release_Price'].str.replace('$', '').str.strip()
-    df['Release_Price'] = pd.to_numeric(df['Release_Price'], errors='coerce')
+    df['Release_Price'] = pd.to_numeric(df['Release_Price'], errors='coerce').astype('float32')
 
     #texture Rate
     df['Texture_Rate'] = df['Texture_Rate'].str.replace('GTexels/s', '').str.strip()
-    df['Texture_Rate'] = pd.to_numeric(df['Texture_Rate'], errors='coerce')
+    df['Texture_Rate'] = pd.to_numeric(df['Texture_Rate'], errors='coerce').astype('Int64')
 
     # infer floats
-    df[['Open_GL', 'Shader']] = pd.to_numeric(df[['Open_GL', 'Shader']], errors='coerce')
+    df[['Open_GL', 'Shader']] = df[['Open_GL', 'Shader']].apply(
+        lambda col: pd.to_numeric(col, errors='coerce')
+    ).astype('float64')
 
     # extras, making them numbers 
-    transformToNumber = df[['DVI_Connection', 'DisplayPort_Connection','HDMI_Connection', 'TMUs', 'VGA_Connection']]
-    transformToNumber = transformToNumber.astype('Int16', errors='ignore')
+    df[['DVI_Connection', 'DisplayPort_Connection','HDMI_Connection', 'TMUs', 'VGA_Connection']] = df[['DVI_Connection', 'DisplayPort_Connection','HDMI_Connection', 'TMUs', 'VGA_Connection']].apply(
+        lambda col: pd.to_numeric(col, errors='coerce')
+    ).astype('Int64')
 
     ##! Categories
     UNKNOWN = "Unknown"
@@ -107,7 +115,7 @@ def ParseFields(dataFrame):
     BOOLEAN_CATS = ["Yes", "No"]
     
     df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].replace({ 
-    np.nan: UNKNOWN, pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
+        pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
     })
 
     df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].astype(CategoricalDtype(categories=BOOLEAN_CATS + [UNKNOWN]))
@@ -116,7 +124,7 @@ def ParseFields(dataFrame):
     MANUFACTURER_CATS = ["AMD", "Nvidia", "Intel", "ATI"]
 
     df['Manufacturer'] = df['Manufacturer'].replace({ 
-        np.nan: UNKNOWN, pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
+        pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
     })
 
     df['Manufacturer'] = df['Manufacturer'].astype(CategoricalDtype(categories=MANUFACTURER_CATS + [UNKNOWN]))
@@ -125,7 +133,7 @@ def ParseFields(dataFrame):
     MEMTYPE_CATS = ['GDDR3', 'GDDR4', 'GDDR5', 'DDR', 'DDR3', 'DDR4', 'GDDR5X', 'HBM-2', 'DDR2', 'eDRAM', 'HBM-1', 'GDDR2']
 
     df['Memory_Type'] = df['Memory_Type'].replace({ 
-        np.nan: UNKNOWN, pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
+        pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
     })
 
     df['Memory_Type'] = df['Memory_Type'].astype(CategoricalDtype(categories=MEMTYPE_CATS + [UNKNOWN]))
