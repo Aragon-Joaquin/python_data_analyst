@@ -112,10 +112,9 @@ def ParseFields(dataFrame):
 
     # Dedicated_GPU, Integrated_GPU, Notebook_GPU y SLI_Crossfire
     BOOLEAN_CATS = ["Yes", "No"]
-    
     df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].apply(
     lambda x: x.str.replace(' ', '', regex=False).str.replace('nan', '', regex=False).replace('', pd.NA)).fillna(UNKNOWN)
-    
+
     df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].astype(CategoricalDtype(categories=BOOLEAN_CATS + [UNKNOWN]))
 
     # Manufacturer
