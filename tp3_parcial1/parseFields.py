@@ -24,13 +24,14 @@ def ParseFields(dataFrame):
     ).astype('float32')
 
     #cache
-    L2_CacheSplit = df['L2_Cache'].str.split('(', n=1, expand=True) # 1024KB(x2) -> ['1024KB', 'x2)']
+    L2_CacheSplit = df['L2_Cache'].str.split('KB', n=1, expand=True) # 1024KB(x2) -> ['1024', '(x2)']
 
     df['L2_Cache'] = L2_CacheSplit[0].str.strip() \
-        .replace('KB','') \
-        .astype('Int64', errors='ignore') # '1024KB' -> 1024
+        .astype('Int64', errors='ignore') # '1024' -> 1024
 
+    #TODO: una regex puede ayudar
     df["L2_CacheQuantity"] = L2_CacheSplit[1].str.strip() \
+        .str.replace('(', '') \
         .str.replace('x', '') \
         .str.replace(')', '') \
         .fillna('1') \
@@ -44,7 +45,7 @@ def ParseFields(dataFrame):
 
     # memory
     df['Memory'] = df['Memory'].str.replace('MB', '').str.replace('MB', '').str.strip()
-    df['Memory'] = df['Memory'].astype("Int64", errors="ignore")
+    df['Memory'] =  pd.to_numeric(df['Memory'], errors="coerce").astype("Int64", errors="ignore")
 
     # memory bandwidth
     df['Memory_Bandwidth_GBps'] = df['Memory_Bandwidth'].str.replace('GB/sec', '').str.replace('MB/sec', '').str.strip()
@@ -144,6 +145,10 @@ def ParseFields(dataFrame):
         format='%d-%b-%Y', 
         errors='coerce'
     )
-    df['Release_Date'] = df['Release_Date'].dt.strftime('%d/%m/%Y')
+    
+    df['Release_Date'] = pd.to_datetime(
+        df['Release_Date'].dt.strftime('%d/%m/%Y'), 
+        errors='coerce'
+    )
 
     return df
