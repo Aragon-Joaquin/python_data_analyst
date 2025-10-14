@@ -1,4 +1,3 @@
-#campos skippeados: Power_Connector
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
@@ -79,8 +78,8 @@ def ParseFields(dataFrame):
     df['Process'] = pd.to_numeric(df['Process'], errors='coerce').astype('Int32')
 
     #ROPS
-    #Los valores de ROPs pueden ser por ejemplo: 8 (x2),32,
-    #es decir, puede haber o no, una cantidad entre parentesis que indica la cantidad de bloques  por lo tanto, creamos dos nuevas columnas "ROPs" y "ROPs_Blocks"
+    #Los valores de ROPs pueden ser, por ejemplo: 8 (x2),32...
+    #Es decir, puede haber o no una cantidad entre parentesis que indica la cantidad de bloques, por lo tanto creamos dos nuevas columnas, "ROPs" y "ROPs_Blocks"
     df[['ROPs', 'ROPs_Blocks']] = df['ROPs'].str.split('(', n=1, expand=True) # 8 (x2) -> ['8 ', 'x2)']
     df['ROPs'] = df['ROPs'].str.strip()
     df['ROPs'] = pd.to_numeric(df['ROPs'], errors='coerce').astype('Int32')
@@ -114,30 +113,32 @@ def ParseFields(dataFrame):
     # Dedicated_GPU, Integrated_GPU, Notebook_GPU y SLI_Crossfire
     BOOLEAN_CATS = ["Yes", "No"]
     
-    df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].replace({ 
-        pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
-    })
-
+    df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].apply(
+    lambda x: x.str.replace(' ', '', regex=False).str.replace('nan', '', regex=False).replace('', pd.NA)).fillna(UNKNOWN)
+    
     df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]] = df[["Dedicated", "Integrated", "Notebook_GPU", "SLI_Crossfire"]].astype(CategoricalDtype(categories=BOOLEAN_CATS + [UNKNOWN]))
 
     # Manufacturer
     MANUFACTURER_CATS = ["AMD", "Nvidia", "Intel", "ATI"]
 
-    df['Manufacturer'] = df['Manufacturer'].replace({ 
-        pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
-    })
+    df['Manufacturer'] = df['Manufacturer'].str.replace('nan', '', regex=False).replace('', pd.NA).fillna(UNKNOWN)
 
     df['Manufacturer'] = df['Manufacturer'].astype(CategoricalDtype(categories=MANUFACTURER_CATS + [UNKNOWN]))
 
     # Memory_Type
     MEMTYPE_CATS = ['GDDR3', 'GDDR4', 'GDDR5', 'DDR', 'DDR3', 'DDR4', 'GDDR5X', 'HBM-2', 'DDR2', 'eDRAM', 'HBM-1', 'GDDR2']
 
-    df['Memory_Type'] = df['Memory_Type'].replace({ 
-        pd.NA: UNKNOWN, "": UNKNOWN, " ": UNKNOWN
-    })
+    df['Memory_Type'] = df['Memory_Type'].str.replace('nan', '', regex=False).replace('', pd.NA).fillna(UNKNOWN)
 
     df['Memory_Type'] = df['Memory_Type'].astype(CategoricalDtype(categories=MEMTYPE_CATS + [UNKNOWN]))
+    
+    # Power_Connector
+    POWER_CONNECTOR_CATS = ['2x 6-pin', '1x 6-pin + 1x 8-pin','1x 6-pin', '2x 8-pin', '1x 8-pin', '3x 8-pin', '4x 6-pin']
 
+    df['Power_Connector'] = df['Power_Connector'].str.replace('nan', '', regex=False).replace('None', '', regex=False).replace('', pd.NA).fillna(UNKNOWN)
+
+    df['Power_Connector'] = df['Power_Connector'].astype(CategoricalDtype(categories=POWER_CONNECTOR_CATS + [UNKNOWN]))
+    
     #! Dates
     df['Release_Date'] = pd.to_datetime(
         df['Release_Date'], 
