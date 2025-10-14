@@ -57,13 +57,13 @@ def ParseFields(dataFrame):
     df.rename(columns={'Memory_Bandwidth_GBps': 'Memory_Bandwidth'}, inplace=True) # sobreescribimos los cambios
 
     # memory bus
-    df['Memory_Bus'] = df['Memory_Bus'].str.replace('bit', '').str.strip()
+    df['Memory_Bus'] = df['Memory_Bus'].str.replace('Bit', '').str.strip()
     df['Memory_Bus'] =  df['Memory_Bus'].astype("Int64", errors="ignore")
 
     # psu
     #Creamos dos nuevas columnas "PSU_W" Y "PSU_Amps" en base a PSU. Ejemplo: 450 Watt & 38 Amps -> PSU_W = 450, PSU_Amps = 38
     df[['PSU_W', 'PSU_Amps']] = df['PSU'].str.split('&', expand=True)
-    df['PSU_W'] = df['PSU_W'].str.replace('Watts', '').str.strip()
+    df['PSU_W'] = df['PSU_W'].str.replace('Watt', '').str.strip()
     df['PSU_Amps'] = df['PSU_Amps'].str.replace('Amps', '').str.strip()
 
     df[['PSU_W', 'PSU_Amps']] = df[['PSU_W', 'PSU_Amps']].apply(
@@ -95,7 +95,7 @@ def ParseFields(dataFrame):
     df['Release_Price'] = pd.to_numeric(df['Release_Price'], errors='coerce').astype('float32')
 
     #texture Rate
-    df['Texture_Rate'] = df['Texture_Rate'].str.replace('GTexels/s', '').str.strip()
+    df['Texture_Rate'] = df['Texture_Rate'].str.replace('GTexel/s', '').str.strip()
     df['Texture_Rate'] = pd.to_numeric(df['Texture_Rate'], errors='coerce').astype('Int64')
 
     # infer floats

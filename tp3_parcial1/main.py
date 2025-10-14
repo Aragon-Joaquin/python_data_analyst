@@ -110,3 +110,36 @@ plt.ylabel("Frecuencia máxima")
 plt.tight_layout()
 plt.show()
 plt.close()
+
+# 4.E) Heatmap de correlaciones entre 3 o más variables numéricas
+corr = dfParsed[['Core_Speed','PSU_W','Memory_Bus','Max_Power']].corr()
+
+plt.figure(figsize=(8, 6))
+
+sns.heatmap(
+    corr,
+    annot=True,
+    fmt=".2f", # format to .2 floating value (creo que es)
+    cmap="coolwarm",
+    vmin=-1,
+    vmax=1,
+    square=True,
+)
+
+plt.title("Heatmap de correlaciones.")
+plt.tight_layout()
+plt.show()
+plt.close()
+
+#4.F) Opcional: matriz de dispersión (pairplot) para un subconjunto de variables
+
+sns.pairplot(
+    dfParsed[["TMUs", "Texture_Rate", "Open_GL"]].dropna(),
+    diag_kind="hist",
+    corner=False
+)
+
+plt.suptitle("Heatmap de correlaciones.")
+plt.tight_layout()
+plt.show()
+plt.close()
