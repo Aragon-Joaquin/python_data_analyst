@@ -32,3 +32,20 @@ def descriptiveAnalysis(df_parsed):
         ColorPrint(f"  Percentil 25 (Q1): {desc_stats['25%']:.2f}", COLORS.GREEN)
         ColorPrint(f"  Percentil 75 (Q3): {desc_stats['75%']:.2f}", COLORS.GREEN)
         ColorPrint(f"  Máximo: {desc_stats['max']:.2f}", COLORS.GREEN)
+
+'''
+    En el ejemplo de "Core_Speed", las siguientes medidas pueden ser intrepretadas de la siguiente manera:
+
+    - Media: Nos ayuda a promediar cual va a ser el valor mas probable de la velocidad del Nucleo
+    - Mediana: De todos los valores, selecciona el intermedio logrando que separe la mitad superior
+        de la inferior. Devolviendo la tendencia central de la velocidad del Nucleo
+    
+    - Desviación estándar: Mide si los valores tienen valores similares o si diferen mucho de uno y otro.
+        Mientras mas alta la Desviacion, entonces mas disperso estaran los datos
+    - Rango: Indica la diferencia entre el valor maximo y el valor menor de los datos
+
+    - Mínimo: El valor con menor velocidad de nucleo
+    - Máximo: El valor con mayor velocidad de nucleo
+    - Cuartiles: Divide los datos en 4 partes (25, 50%, 75 y 100%), suele indicar la variacion de datos
+        En este caso, diferencia entre gpus lentos (Q1) y gpus rapidos (Q3) y nos permite ver en cuanto diferen
+'''

@@ -74,12 +74,10 @@ plt.close()
 # 4.C) Boxplot por categoría o mes.
 
 # hacemos una mascara entre el año 2007 y 2020
-dfParsed['Release_Year'] = dfParsed['Release_Date'].dt.year
 mask_anios = (dfParsed['Release_Year'] >= 2007) & (dfParsed['Release_Year'] <= 2020)
 df_filtered = dfParsed[mask_anios].copy()
 
 # forzar para que se vea como el año y no como flotante
-df_filtered['Release_Year'] = df_filtered['Release_Year'].astype('Int32') 
 
 #boxplot nos permite ver el crecimiento de las unidades de Render Output Units
 # a traves de los años al igual que sus outliers que hubo.
@@ -157,7 +155,7 @@ sns.pairplot(
     corner=False
 )
 
-plt.suptitle("PairPLot de TMU's, Maximo poder y la tasa de textura")
+plt.suptitle("PairPlot de TMU's, Maximo poder y la tasa de textura")
 plt.tight_layout()
 plt.show()
 plt.close()

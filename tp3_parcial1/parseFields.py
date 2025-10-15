@@ -149,4 +149,10 @@ def ParseFields(dataFrame):
         errors='coerce'
     )
 
+    df['Release_Year'] = (df['Release_Date'].dt.year).astype('Int32') 
+    df['Release_Month'] = (df['Release_Date'].dt.month).astype('Int8')
+    
+    #! Auditoria de calidad
+    df.drop_duplicates()
+    
     return df
