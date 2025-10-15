@@ -41,7 +41,7 @@ def ParseFields(dataFrame):
 
     # max power
     df['Max_Power'] = df['Max_Power'].str.replace('Watts', '').str.strip()
-    df['Max_Power'].astype('Int64', errors='ignore')
+    df['Max_Power'] =  pd.to_numeric(df['Max_Power'], errors="coerce").astype("Int64", errors="ignore")
 
     # memory
     df['Memory'] = df['Memory'].str.replace('MB', '').str.replace('MB', '').str.strip()
@@ -53,8 +53,6 @@ def ParseFields(dataFrame):
 
     mask_MBps = df['Memory_Bandwidth'].str.contains('MB/sec', na=False)
     df.loc[mask_MBps, 'Memory_Bandwidth_GBps'] = df.loc[mask_MBps, 'Memory_Bandwidth_GBps'] / 1024
-
-    df.rename(columns={'Memory_Bandwidth_GBps': 'Memory_Bandwidth'}, inplace=True) # sobreescribimos los cambios
 
     # memory bus
     df['Memory_Bus'] = df['Memory_Bus'].str.replace('Bit', '').str.strip()
